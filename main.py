@@ -1,6 +1,7 @@
+from scrape.indeed_scraper import *
 
-# Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    pass
-
-print("test")
+    soup = extract_soup('https://www.indeed.com/jobs?q=python+developer&l=New+York+City%2C+NY')
+    links = extract_job_links(soup)
+    content = get_job_content(links[0])
+    print(content)
