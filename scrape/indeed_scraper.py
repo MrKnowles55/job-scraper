@@ -1,6 +1,7 @@
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from bs4 import BeautifulSoup
+import urllib.parse
 
 
 def extract_soup(url):
@@ -82,4 +83,51 @@ def get_job_content(link):
     content = soup.get_text()
 
     return content
+
+
+def build_indeed_url(base_url, query, location, experience_level=None, is_remote=None, education=None, start=None):
+    url_params = {
+        'q': query,
+        'l': location,
+    }
+    if experience_level:
+        url_params['explvl'] = experience_level
+    if is_remote:
+        url_params['remote'] = 'true' if is_remote else 'false'
+    if education:
+        url_params['edu'] = education
+    if start:
+        url_params['start'] = start
+
+    query_string = urllib.parse.urlencode(url_params)
+    return f"{base_url}?{query_string}"
+
+
+def extract_multiple_pages_from_url(pages, base_url, query, location, experience_level=None, is_remote=None, education=None):
+    for page in range(pages):
+        url = build_indeed_url(base_url, query, location, experience_level, is_remote, education, page*10)
+        print(url)
+
+        soup = extract_soup(url)
+        links = extract_job_links(soup)
+        print(links)
+
+# Example usage:
+base_url = 'https://www.indeed.com/jobs'
+query = '$50,000'
+location = 'Lafayette, IN'
+experience_level = 'entry_level'
+is_remote = False
+education = 'Bachelor'
+
+extract_multiple_pages_from_url(5, base_url, query, location, experience_level, is_remote, education)
+
+# url = build_indeed_url(base_url, query, location, experience_level, is_remote, education, start)
+# print(url)
+#
+# soup = extract_soup(url)
+# links = extract_job_links(soup)
+# print(links)
+
+
 
