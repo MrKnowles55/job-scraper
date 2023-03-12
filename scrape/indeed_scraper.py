@@ -51,9 +51,11 @@ def extract_job_links(soup):
 
     # Selects each Job button and collects the job ids
     for job in soup.find_all('a', {'role': 'button'}):
-        link = job.find('span')['id']
-        job_links.append(link[9:])
-
+        if 'id' in job.find('span').attrs:
+            link = job.find('span')['id']
+            job_links.append(link[9:])
+        else:
+            raise KeyError("'id' not found in job:", job)
     return job_links
 
 
@@ -104,30 +106,45 @@ def build_indeed_url(base_url, query, location, experience_level=None, is_remote
 
 
 def extract_multiple_pages_from_url(pages, base_url, query, location, experience_level=None, is_remote=None, education=None):
+    link_list = []
     for page in range(pages):
         url = build_indeed_url(base_url, query, location, experience_level, is_remote, education, page*10)
-        print(url)
-
         soup = extract_soup(url)
         links = extract_job_links(soup)
-        print(links)
+        link_list += links
+
+    return list(set(link_list))
+
+
+def save_links(links: list, filename="../data/job_links.txt"):
+    with open(filename, 'w') as f:
+        for link in links:
+            f.write(link + '\n')
+
+
+def load_links(filename="../data/job_links.txt"):
+    with open(filename, 'r') as f:
+        return f.read().splitlines()
+
 
 # Example usage:
-base_url = 'https://www.indeed.com/jobs'
-query = '$50,000'
-location = 'Lafayette, IN'
-experience_level = 'entry_level'
-is_remote = False
-education = 'Bachelor'
+if __name__ == "__main__":
+    base_url = 'https://www.indeed.com/jobs'
+    query = '$50,000'
+    location = 'Lafayette, IN'
+    experience_level = 'entry_level'
+    is_remote = False
+    education = 'Bachelor'
 
-extract_multiple_pages_from_url(5, base_url, query, location, experience_level, is_remote, education)
+    # links = extract_multiple_pages_from_url(1, base_url, query, location, experience_level, is_remote, education)
+    # content = get_job_content(links[0])
 
-# url = build_indeed_url(base_url, query, location, experience_level, is_remote, education, start)
-# print(url)
-#
-# soup = extract_soup(url)
-# links = extract_job_links(soup)
-# print(links)
+    url = build_indeed_url(base_url,query,location,experience_level,is_remote,education)
+    soup = extract_soup(url)
+    links = extract_job_links(soup)
+
+    content = get_job_content(links[0])
+    print(content)
 
 
 
